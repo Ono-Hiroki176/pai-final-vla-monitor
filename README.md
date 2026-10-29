@@ -56,7 +56,19 @@ tests/                監視層の単体テスト
 
 ## 再現手順
 
-Colab（T4）で `notebooks/run_colab.ipynb` を上から実行する。ローカル（Linux、CPU でも動くが遅い）では:
+### Colab（T4）をターミナルから使う（[google-colab-cli](https://github.com/googlecolab/google-colab-cli)）
+
+```bash
+python tools/colab_driver.py setup     # T4 セッション作成 → コード転送 → 専用 venv の構築
+python tools/colab_driver.py run main_spatial --suite libero_spatial --tasks 0-9 --episodes 5 --init-offset 5 \
+    --conditions base,monitor --disturb off,on
+python tools/colab_driver.py stop      # 必ず止める
+```
+
+タスクごとに結果を `outputs/colab/<名前>/` へ回収するので、VM が落ちても同じコマンドで続きから再開できる。
+ブラウザの Colab で回す場合は `notebooks/run_colab.ipynb` を上から実行する。
+
+### ローカル（Linux、CPU でも動くが遅い）
 
 ```bash
 uv venv -p 3.12 .venv && uv pip install --python .venv -r requirements.txt
