@@ -50,7 +50,7 @@ PY = '/content/venv/bin/python'"""),
 ("code", """!$PY -m runner.run_eval --suite libero_spatial --tasks 0-9 --episodes 3 --conditions base --out $OUT/calib_spatial
 !$PY -m runner.run_eval --suite libero_object --tasks 0-9 --episodes 3 --conditions base --out $OUT/calib_object
 !$PY -m runner.analyze $OUT/calib_spatial $OUT/calib_object"""),
-("code", """EMPTY_WIDTH = 0.0034  # ↑の結果を見て決める（holding の最小値より小さく、empty の大半より大きい値）"""),
+("code", """EMPTY_WIDTH = 0.003   # ↑の結果を見て決める（holding の最小値より小さく、empty の大半より大きい値）"""),
 ("md", """## 5. 本評価
 
 各スイート 10 タスク × 5 初期状態 × {base, monitor} × {妨害なし, あり} = 200 エピソード。

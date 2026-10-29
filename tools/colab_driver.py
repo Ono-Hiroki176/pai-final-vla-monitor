@@ -27,15 +27,77 @@ REMOTE = "/content/pai-final"
 LOCAL_OUT = ROOT / "outputs" / "colab"
 
 
-def colab(*args: str, timeout: float = 600) -> subprocess.CompletedProcess:
+class ConnectionLost(RuntimeError):
+    pass
+
+
+def colab(*args: str, timeout: float = 600, silence: float = 300) -> None:
+    """colab-cli を呼び、出力を流す。接続が切れると CLI は "Connection was lost." を出したまま
+    終わらないことがあるので、その行を見たとき・silence 秒なにも出ないときは打ち切って ConnectionLost にする。"""
+    import queue
+    import threading
+    import time
+
     cmd = ["colab", *args]
     print("[driver]", " ".join(shlex.quote(a) for a in cmd), flush=True)
-    return subprocess.run(cmd, stdin=subprocess.DEVNULL, timeout=timeout, check=True)
+    p = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                         text=True, bufsize=1)
+    q: queue.Queue = queue.Queue()
+    threading.Thread(target=lambda: [q.put(l) for l in p.stdout] + [q.put(None)], daemon=True).start()
+    start = last = time.monotonic()
+    lost = False
+    while True:
+        try:
+            line = q.get(timeout=5)
+        except queue.Empty:
+            now = time.monotonic()
+            if now - start > timeout or now - last > silence:
+                lost = True
+                break
+            continue
+        if line is None:
+            break
+        last = time.monotonic()
+        print(line, end="", flush=True)
+        if "Connection was lost" in line:
+            lost = True
+            break
+    if lost:
+        p.kill()
+        p.wait()
+        raise ConnectionLost(" ".join(cmd[:3]))
+    if p.wait() != 0:
+        raise subprocess.CalledProcessError(p.returncode, cmd)
 
 
-def remote_sh(cmd: str, timeout: float = 3600) -> None:
-    colab("exec", "-s", SESSION, "--env", f"CMD={cmd}", "-f", str(ROOT / "tools" / "colab_sh.py"),
-          "--timeout", str(int(timeout)), timeout=timeout + 120)
+def retry(fn, retries: int = 2) -> None:
+    import time
+
+    for attempt in range(retries + 1):
+        try:
+            return fn()
+        except (subprocess.CalledProcessError, ConnectionLost):
+            if attempt == retries:
+                raise
+            print(f"[driver] failed, retry {attempt + 1}/{retries} in 30s", flush=True)
+            time.sleep(30)
+
+
+def remote_sh(cmd: str, timeout: float = 3600, retries: int = 2) -> None:
+    """接続が一時的に切れたときは少し待って再実行する。同じカーネルでの実行は順番待ちになり、
+    run_eval は記録済みのエピソードを飛ばすので、再実行しても二重には走らない。"""
+    import time
+
+    for attempt in range(retries + 1):
+        try:
+            colab("exec", "-s", SESSION, "--env", f"CMD={cmd}", "-f", str(ROOT / "tools" / "colab_sh.py"),
+                  "--timeout", str(int(timeout)), timeout=timeout + 120)
+            return
+        except (subprocess.CalledProcessError, ConnectionLost):
+            if attempt == retries:
+                raise
+            print(f"[driver] exec failed, retry {attempt + 1}/{retries} in 30s", flush=True)
+            time.sleep(30)
 
 
 def setup() -> None:
@@ -49,10 +111,10 @@ def setup() -> None:
 def fetch(name: str, with_video: bool) -> None:
     remote_zip = f"/content/{name}.zip"
     parts = f"{name}/results.jsonl {name}/config.json {name}/steps" + (f" {name}/videos" if with_video else "")
-    remote_sh(f"cd outputs && rm -f {remote_zip} && zip -qr {remote_zip} {parts}", timeout=300)
+    remote_sh(f"cd outputs && rm -f {remote_zip} && zip -qr {remote_zip} {parts}", timeout=120)
     LOCAL_OUT.mkdir(parents=True, exist_ok=True)
     local_zip = LOCAL_OUT / f"{name}.zip"
-    colab("download", "-s", SESSION, remote_zip, str(local_zip))
+    retry(lambda: colab("download", "-s", SESSION, remote_zip, str(local_zip)))
     with zipfile.ZipFile(local_zip) as z:
         z.extractall(LOCAL_OUT)
 
@@ -62,8 +124,11 @@ def restore(name: str) -> None:
     res = LOCAL_OUT / name / "results.jsonl"
     if not res.exists():
         return
-    remote_sh(f"mkdir -p outputs/{name}", timeout=120)
-    colab("upload", "-s", SESSION, str(res), f"{REMOTE}/outputs/{name}/results.jsonl")
+    tmp = f"/content/restore_{name}.jsonl"
+    retry(lambda: colab("upload", "-s", SESSION, str(res), tmp))
+    # VM 側に結果が残っていればそちらが新しいので上書きしない
+    remote_sh(f"mkdir -p outputs/{name} && (test -f outputs/{name}/results.jsonl || cp {tmp} outputs/{name}/results.jsonl)",
+              timeout=120)
 
 
 def run(name: str, rest: list[str]) -> None:
