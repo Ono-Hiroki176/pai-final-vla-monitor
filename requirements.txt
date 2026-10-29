@@ -1,0 +1,3 @@
+# 公開パッケージのみ。lerobot が LIBERO（hf-libero）・robosuite・mujoco・SmolVLA の依存をまとめて入れる
+lerobot[libero,smolvla]==0.6.1
+pytest

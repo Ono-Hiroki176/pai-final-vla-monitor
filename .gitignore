@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+outputs/
+*.mp4
+*.npz
+.ipynb_checkpoints/
+*.log
+# 手元専用の計画メモ（公開しない）
+final_assignment_plan.md
