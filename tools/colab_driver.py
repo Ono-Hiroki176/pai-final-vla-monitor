@@ -70,7 +70,7 @@ def colab(*args: str, timeout: float = 600, silence: float = 300) -> None:
         raise subprocess.CalledProcessError(p.returncode, cmd)
 
 
-def retry(fn, retries: int = 2) -> None:
+def retry(fn, retries: int = 4) -> None:
     import time
 
     for attempt in range(retries + 1):
@@ -83,7 +83,7 @@ def retry(fn, retries: int = 2) -> None:
             time.sleep(30)
 
 
-def remote_sh(cmd: str, timeout: float = 3600, retries: int = 2) -> None:
+def remote_sh(cmd: str, timeout: float = 3600, retries: int = 4) -> None:
     """接続が一時的に切れたときは少し待って再実行する。同じカーネルでの実行は順番待ちになり、
     run_eval は記録済みのエピソードを飛ばすので、再実行しても二重には走らない。"""
     import time

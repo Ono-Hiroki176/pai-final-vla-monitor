@@ -1,0 +1,35 @@
+{
+  "args": {
+    "suite": "libero_spatial",
+    "tasks": "9",
+    "episodes": 3,
+    "init_offset": 0,
+    "conditions": "base",
+    "disturb": "off",
+    "max_steps": 0,
+    "max_retries": 2,
+    "empty_width": 0.0034,
+    "policy": null,
+    "out": "outputs/calib_spatial",
+    "video": "none"
+  },
+  "detector": {
+    "settle_steps": 8,
+    "finger_still": 0.0002,
+    "empty_width": 0.0034,
+    "stall_window": 60,
+    "stall_eps": 0.008,
+    "dither_toggles": 6,
+    "warmup_steps": 20
+  },
+  "recovery": {
+    "open_steps": 10,
+    "lift_height": 0.08,
+    "lift_max_steps": 30,
+    "shift_min": 0.01,
+    "shift_max": 0.025,
+    "shift_max_steps": 20,
+    "reach_tol": 0.005,
+    "max_speed": 0.6
+  }
+}

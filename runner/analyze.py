@@ -61,16 +61,22 @@ def paired(results: list[dict]) -> dict:
     """同じ初期状態・同じ妨害での base と monitor の対。救えた数と壊した数を数える。"""
     by = defaultdict(dict)
     for r in results:
-        by[(r["suite"], r["task_id"], r["init_id"], r["disturb"])][r["cond"]] = r["success"]
+        by[(r["suite"], r["task_id"], r["init_id"], r["disturb"])][r["cond"]] = r
     rescued = broken = both = neither = 0
+    noint_n = noint_diff = 0
     for v in by.values():
         if "base" in v and "monitor" in v:
-            b, m = v["base"], v["monitor"]
+            b, m = v["base"]["success"], v["monitor"]["success"]
             rescued += (not b) and m
             broken += b and (not m)
             both += b and m
             neither += (not b) and (not m)
-    return {"rescued": rescued, "broken": broken, "both": both, "neither": neither}
+            # 監視層が一度も介入しなかった対は、本来同じ結果になるはず。食い違いは走行ごとのぶれ
+            if v["monitor"]["retries"] == 0 and not v["monitor"]["help"]:
+                noint_n += 1
+                noint_diff += b != m
+    return {"rescued": rescued, "broken": broken, "both": both, "neither": neither,
+            "no_intervention_pairs": noint_n, "no_intervention_mismatch": noint_diff}
 
 
 def l1_sweep(steps: dict[str, dict], thresholds=(0.002, 0.003, 0.004, 0.005, 0.006, 0.008, 0.010)) -> list[dict]:

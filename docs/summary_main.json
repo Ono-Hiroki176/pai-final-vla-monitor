@@ -1,0 +1,219 @@
+{
+  "success": [
+    {
+      "suite": "libero_object",
+      "cond": "base",
+      "disturb": false,
+      "n": 50,
+      "success": 37,
+      "rate": 0.74,
+      "ci95": [
+        0.6044657801100008,
+        0.8412862034863262
+      ],
+      "help": 0,
+      "mean_retries": 0.0,
+      "mean_steps": 169.02
+    },
+    {
+      "suite": "libero_object",
+      "cond": "base",
+      "disturb": true,
+      "n": 50,
+      "success": 0,
+      "rate": 0.0,
+      "ci95": [
+        0.0,
+        0.07135003417431873
+      ],
+      "help": 0,
+      "mean_retries": 0.0,
+      "mean_steps": 280.0
+    },
+    {
+      "suite": "libero_object",
+      "cond": "monitor",
+      "disturb": false,
+      "n": 50,
+      "success": 42,
+      "rate": 0.84,
+      "ci95": [
+        0.7148551903823401,
+        0.9166267863791231
+      ],
+      "help": 7,
+      "mean_retries": 0.58,
+      "mean_steps": 154.08
+    },
+    {
+      "suite": "libero_object",
+      "cond": "monitor",
+      "disturb": true,
+      "n": 50,
+      "success": 15,
+      "rate": 0.3,
+      "ci95": [
+        0.1910338908960936,
+        0.4375061227736339
+      ],
+      "help": 29,
+      "mean_retries": 2.32,
+      "mean_steps": 231.38
+    },
+    {
+      "suite": "libero_spatial",
+      "cond": "base",
+      "disturb": false,
+      "n": 50,
+      "success": 29,
+      "rate": 0.58,
+      "ci95": [
+        0.4423319668777783,
+        0.7062520276543307
+      ],
+      "help": 0,
+      "mean_retries": 0.0,
+      "mean_steps": 181.18
+    },
+    {
+      "suite": "libero_spatial",
+      "cond": "base",
+      "disturb": true,
+      "n": 50,
+      "success": 7,
+      "rate": 0.14,
+      "ci95": [
+        0.06950745262022862,
+        0.2618645719852809
+      ],
+      "help": 0,
+      "mean_retries": 0.0,
+      "mean_steps": 256.06
+    },
+    {
+      "suite": "libero_spatial",
+      "cond": "monitor",
+      "disturb": false,
+      "n": 50,
+      "success": 31,
+      "rate": 0.62,
+      "ci95": [
+        0.4815019502239357,
+        0.7413740415742278
+      ],
+      "help": 7,
+      "mean_retries": 0.82,
+      "mean_steps": 165.56
+    },
+    {
+      "suite": "libero_spatial",
+      "cond": "monitor",
+      "disturb": true,
+      "n": 50,
+      "success": 16,
+      "rate": 0.32,
+      "ci95": [
+        0.20758044093999403,
+        0.45810557136276076
+      ],
+      "help": 24,
+      "mean_retries": 2.14,
+      "mean_steps": 206.16
+    }
+  ],
+  "paired": {
+    "rescued": 33,
+    "broken": 2,
+    "both": 71,
+    "neither": 94,
+    "no_intervention_pairs": 72,
+    "no_intervention_mismatch": 2
+  },
+  "l1_sweep": [
+    {
+      "threshold": 0.002,
+      "n_steps": 20147,
+      "n_empty": 9406,
+      "precision": 0.9995644599303136,
+      "recall": 0.7319795874973422
+    },
+    {
+      "threshold": 0.003,
+      "n_steps": 20147,
+      "n_empty": 9406,
+      "precision": 0.9996275605214152,
+      "recall": 0.8560493302147565
+    },
+    {
+      "threshold": 0.004,
+      "n_steps": 20147,
+      "n_empty": 9406,
+      "precision": 0.9366573686657369,
+      "recall": 0.856793536040825
+    },
+    {
+      "threshold": 0.005,
+      "n_steps": 20147,
+      "n_empty": 9406,
+      "precision": 0.754800037463707,
+      "recall": 0.856793536040825
+    },
+    {
+      "threshold": 0.006,
+      "n_steps": 20147,
+      "n_empty": 9406,
+      "precision": 0.7255784640316917,
+      "recall": 0.856793536040825
+    },
+    {
+      "threshold": 0.008,
+      "n_steps": 20147,
+      "n_empty": 9406,
+      "precision": 0.7082968667950289,
+      "recall": 0.8604082500531576
+    },
+    {
+      "threshold": 0.01,
+      "n_steps": 20147,
+      "n_empty": 9406,
+      "precision": 0.7071775312066574,
+      "recall": 0.8673187327237933
+    }
+  ],
+  "width": {
+    "holding": {
+      "n": 10741,
+      "min": 0.0009982307829267195,
+      "p05": 0.003990785645397993,
+      "median": 0.036801328648998384,
+      "p95": 0.055713904626241345,
+      "max": 0.07920464307454414
+    },
+    "empty": {
+      "n": 9406,
+      "min": 0.0009969841131449023,
+      "p05": 0.000999768295494167,
+      "median": 0.0014742695354514664,
+      "p95": 0.019487349830111994,
+      "max": 0.05870822955176004
+    }
+  },
+  "events": {
+    "DROP": {
+      "n": 148,
+      "true_empty": 148
+    },
+    "GRASP_MISS": {
+      "n": 565,
+      "true_empty": 564
+    },
+    "DITHER": {
+      "n": 7,
+      "true_empty": null
+    },
+    "STALL": {
+      "n": 1,
+      "true_empty": null
+    }
+  }
+}
