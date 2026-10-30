@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>しくじりに気づくロボット — 説明資料</title>
+<!-- 説明資料（PDF）の元。build_submission.py が図を差し込み、Edge で A4 に印刷する -->
+<style>
+  @page { size: A4; margin: 15mm 16mm 15mm; }
+  :root {
+    --card: #f6f6f4; --chip: #ecebe7; --line: #c9c8c3;
+    --ink: #16161a; --ink2: #55555c; --ink3: #8a8a90;
+    --base: #2a78d6; --mon: #d95a22; --rec: #2a78d6; --help: #8a4bc0; --ok: #2e9e57;
+  }
+  * { box-sizing: border-box; }
+  html { font-size: 10pt; }
+  body { margin: 0; color: var(--ink); line-height: 1.65;
+         font-family: "Noto Sans JP", "Yu Gothic", "Meiryo", sans-serif; }
+  header { border-bottom: 2px solid var(--ink); padding-bottom: 8px; margin-bottom: 14px; }
+  header .kicker { font-size: 9pt; color: var(--ink2); }
+  h1 { font-size: 20pt; margin: 2px 0 0; line-height: 1.3; }
+  header .sub { font-size: 12pt; color: var(--ink2); }
+  header .links { margin-top: 6px; font-size: 9pt; color: var(--ink2); }
+  header .links b { color: var(--ink); font-weight: 700; margin-right: 4px; }
+  header .links span + span { margin-left: 18px; }
+  h2 { font-size: 13pt; margin: 18px 0 6px; padding-left: 8px; border-left: 4px solid var(--mon); line-height: 1.35;
+       break-after: avoid; }
+  p { margin: 0 0 6px; }
+  ul, ol { margin: 2px 0 8px; padding-left: 1.3em; }
+  li { margin: 2px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; font-size: 9pt; break-inside: avoid; }
+  th, td { border-bottom: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
+  th { background: var(--card); font-weight: 700; }
+  td.n, th.n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  td.up { color: var(--mon); font-weight: 700; }
+  figure { margin: 8px 0 12px; break-inside: avoid; }
+  figcaption { font-size: 8.5pt; color: var(--ink2); margin-top: 4px; }
+  .dg { font-size: 8pt; margin: 6px 0 2px; }
+  .chart svg { width: 100%; max-width: 145mm; height: auto; display: block; margin: 0 auto; }
+  .strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .strip div { font-size: 8pt; color: var(--ink2); line-height: 1.4; }
+  .strip img { width: 100%; display: block; border-radius: 3px; margin-bottom: 3px; }
+  .strip b { color: var(--ink); }
+  .two { display: grid; grid-template-columns: 1fr 1.15fr; gap: 14px; align-items: start; }
+  .note { font-size: 8.5pt; color: var(--ink2); }
+  code { font-family: "Consolas", "BIZ UDGothic", monospace; font-size: 8.5pt; background: var(--card); padding: 0 3px; border-radius: 2px; }
+  .page-break { break-before: page; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Physical AI 応用1 最終課題 説明資料</div>
+  <h1>しくじりに気づくロボット</h1>
+  <div class="sub">VLA に後付けする失敗検知・回復レイヤ</div>
+  <div class="links"><!--LINKS--></div>
+</header>
+
+<h2>1. 概要と目的</h2>
+<p>
+VLA（視覚・言語・行動モデル）は、カメラ画像と言語指示から直接ロボットの行動を出す。しかし自分の失敗に気づく仕組みを持たない。
+物を掴み損ねても空の手のまま運び続け、同じ状態に戻れば同じ行動を出して同じ失敗をくり返す。これを直すには再学習が必要で、データも計算資源も大きい。
+</p>
+<p>
+本作品では、<b>どの VLA にも外付けできる「気づいて立て直す」監視層</b>を作った。公開 VLA（SmolVLA）を LIBERO のシミュレーションで動かし、
+監視層あり・なしを<b>同じ初期状態・同じ乱数</b>で走らせて、成功率がどれだけ戻るかを 400 エピソードで定量的に示した。AI は推論のみで使い、追加学習はしていない。
+</p>
+
+<h2>2. システム構成</h2>
+<!--DIAGRAM-->
+<table>
+  <tr><th style="width:20%">部品</th><th>内容</th></tr>
+  <tr><td>方策</td><td><code>lerobot/smolvla_libero</code>（公開重み、推論のみ）。前処理は lerobot の評価と同じ経路を通す</td></tr>
+  <tr><td>L1 把持失敗検知</td><td>閉じ指令を出し続けて指が止まったとき、両指の開き幅が 3 mm 未満なら「何も挟んでいない（空振り）」。掴んでいた状態から 3 mm 未満になったら「落とした」</td></tr>
+  <tr><td>L2 停滞・迷走検知</td><td>直近 60 step（3 秒）の手先の移動範囲が 8 mm 未満、またはグリッパの開閉が 6 回以上</td></tr>
+  <tr><td>回復</td><td>開く → 8 cm 上がる → 水平に 1〜2.5 cm ランダムな方向へずらす → VLA の行動キューを捨てて任せ直す</td></tr>
+  <tr><td>HELP</td><td>2 回やり直しても失敗したら、開いて静止し助けを求める</td></tr>
+</table>
+<p>
+監視層が使うのはロボット自身が観測できる量（手先位置・指の位置・直前の指令）だけである。物体の位置や指と物体の接触といったシミュレータの正解は、
+採点と妨害の演出にだけ使った。そのため実機にもそのまま持っていける。
+</p>
+
+<h2>3. 工夫した点</h2>
+<ol>
+  <li><b>方策の外側に付ける設計。</b>VLA の中身に触れないので、モデルを差し替えても同じコードで動く。監視層はシミュレータにも依存しない（<code>monitor/</code>）。</li>
+  <li><b>「ずらしてから」任せ直す。</b>掴めるかどうかは mm 単位の状態差で決まることが多い。同じ状態から再開すると VLA は同じ行動を出すため、手先を少しずらして別の状態から再試行させる。</li>
+  <li><b>影のモードで検知の精度を測る。</b>素の VLA の走行でも検知器だけを動かし、シミュレータの正解（指と物体の接触）と突き合わせて適合率・再現率を出した。閾値は較正用の初期状態（0〜2 番）で決め、評価は別の初期状態（5〜9 番）で行った。</li>
+  <li><b>妨害テスト。</b>ロボットが物を持ち上げた瞬間に、シミュレータで物を元の場所へ戻す（人が手から取り上げて置き直すのを模す）。現場で起きる「想定外」への強さを測る。</li>
+  <li><b>対にした比較と統計。</b>監視なし・ありを同じ初期状態・同じ乱数で走らせ、対ごとに「救済」「悪化」を数えて McNemar の正確検定で評価した。監視層が一度も介入しなかった対の食い違いから、走行ごとのぶれも見積もった。</li>
+  <li><b>安全にあきらめる。</b>何度やっても駄目なら止まって助けを求める。現場では「無限に再試行しない」ことも重要である。</li>
+</ol>
+<p class="note">
+最終課題サンプル（シミュレータでのロボット操作や、学習済みモデルを試す例）からの発展点：開ループの実行に、失敗の検知と回復の閉ループを加え、較正と統計を含む定量評価まで行った。
+</p>
+
+<h2>4. 実験</h2>
+<ul>
+  <li>環境：LIBERO-Spatial / LIBERO-Object 各 10 タスク（Franka Panda、MuJoCo）。1 エピソード最大 280 step（14 秒）</li>
+  <li>較正：初期状態 0〜2 番 × 素の VLA（60 エピソード）</li>
+  <li>評価：初期状態 5〜9 番 × {監視なし, 監視あり} × {妨害なし, 妨害あり}（400 エピソード）</li>
+  <li>指標：成功率（Wilson の 95% 信頼区間）、対での救済数・悪化数（McNemar 正確検定）、検知の適合率・再現率</li>
+  <li>実行：Google Colab（T4）。手元のターミナルから google-colab-cli で操作した。消費は約 5〜6 CU</li>
+</ul>
+
+<h2>5. 結果</h2>
+<figure class="chart"><!--CHART-->
+  <figcaption>図 1：成功率（各棒 50 エピソード、誤差棒は 95% 信頼区間）。左右の棒は同じ初期状態・同じ乱数</figcaption>
+</figure>
+<div class="two">
+  <table>
+    <tr><th>スイート</th><th>妨害</th><th class="n">素の VLA</th><th class="n">監視あり</th></tr>
+    <tr><td>Spatial</td><td>なし</td><td class="n">29/50 = 58%</td><td class="n">31/50 = 62%</td></tr>
+    <tr><td>Spatial</td><td>あり</td><td class="n">7/50 = 14%</td><td class="n up">16/50 = 32%</td></tr>
+    <tr><td>Object</td><td>なし</td><td class="n">37/50 = 74%</td><td class="n up">42/50 = 84%</td></tr>
+    <tr><td>Object</td><td>あり</td><td class="n">0/50 = 0%</td><td class="n up">15/50 = 30%</td></tr>
+  </table>
+  <table>
+    <tr><th>指標</th><th class="n">値</th></tr>
+    <tr><td>対での救済 / 悪化（全体）</td><td class="n">33 / 2（p = 3.7×10<sup>−8</sup>）</td></tr>
+    <tr><td>妨害なしのみ</td><td class="n">66% → 73%（8 / 1、p = 0.039）</td></tr>
+    <tr><td>妨害ありのみ</td><td class="n">7% → 31%（25 / 1、p = 8×10<sup>−7</sup>）</td></tr>
+    <tr><td>検知の的中率</td><td class="n">712 / 713 = 99.9%</td></tr>
+    <tr><td>「閉じて止まった」時点の判定</td><td class="n">適合率 100%、再現率 86%</td></tr>
+    <tr><td>介入なしの対の食い違い</td><td class="n">2 / 72 = 3%</td></tr>
+  </table>
+</div>
+<p class="note">
+検知の的中率：監視層が空振り・落下と判定した 713 回のうち 712 回で、その瞬間に本当に何も掴んでいなかった（正解はシミュレータの接触判定。監視層自身は見ていない）。
+較正では、何も挟まず閉じたときの開き幅は中央値 1.5 mm、掴んでいるときの最小値は 3.7 mm だった。閾値 4 mm では適合率が 84% に落ちるため 3 mm を採用した。
+</p>
+
+<figure>
+  <div class="strip"><!--FILMSTRIP--></div>
+  <figcaption>図 2：監視層による立て直しの例（LIBERO-Spatial「ラメキンの上の黒いボウルを皿に置く」、監視あり）。同じ初期状態の素の VLA は同じ空振りを 5 回くり返して時間切れになった</figcaption>
+</figure>
+
+<h2>6. 考察・限界</h2>
+<ul>
+  <li><b>素の VLA も掴み直すが、同じ失敗をくり返す。</b>素の VLA の失敗例でも、影のモードの検知器は空振りを何度も記録していた。VLA はほぼ同じ状態から同じ行動を出すため当たらない。「退避して少しずらしてから任せ直す」は、このくり返しを断ち切る効果があった。</li>
+  <li><b>妨害に強くなった。</b>素の VLA は物を取り上げられると空の手のまま運び続け、Object では 50 回中 0 回しか成功しなかった。監視層ありでは落下に気づいて取り直し、30% まで戻った。</li>
+  <li><b>HELP は安全側に働いた。</b>HELP で止まった 67 件のうち 66 件は、素の VLA でも失敗する場面だった（妨害ありで 53 件中 52 件、妨害なしで 14 件中 14 件）。空振りを時間切れまで続ける代わりに、早めに止まって助けを求めた。HELP が成功を奪ったのは 1 件だけである。</li>
+  <li><b>妨害なしの改善は小さい。</b>Spatial では +4pt で、単独では有意でない。救えるのは「指が空で閉じた」と分かる失敗だけで、狙いの物を間違える・置き場所を外すといった失敗は L1/L2 では見えない。</li>
+  <li><b>設定は評価前に固定した。</b>やり直しの上限（2 回）や閾値は評価前に決め、結果を見てから変えていない。上限を増やせばさらに救える可能性がある。</li>
+  <li><b>実機への課題。</b>閾値は Panda のグリッパと LIBERO の物体で較正した。実機では指の位置センサの精度や物の大きさに合わせて較正し直す必要がある。</li>
+  <li><b>発展。</b>VLM による完了確認（L3）で狙い違い・置き場所違いを検知する。検知した失敗とその回復を学習データにして、VLA 自体を改善する。</li>
+</ul>
+
+<h2>7. コード・再現方法・使用した公開物</h2>
+<p>
+コードは GitHub で公開している（URL は冒頭と提出フォームに記載）。<code>monitor/</code> が監視層、<code>runner/</code> が LIBERO での比較実験と集計、
+<code>tools/colab_driver.py</code> がターミナルから Colab で評価を回すドライバである。評価の生データ（<code>results/</code>）も同梱した。
+</p>
+<table>
+  <tr><th>名前</th><th>用途</th><th>ライセンス</th></tr>
+  <tr><td>lerobot 0.6.1</td><td>方策の読み込み・LIBERO 環境</td><td>Apache-2.0</td></tr>
+  <tr><td>lerobot/smolvla_libero</td><td>VLA（推論のみ。追加学習なし）</td><td>Apache-2.0</td></tr>
+  <tr><td>LIBERO（hf-libero 0.1.4）</td><td>シミュレーション環境</td><td>MIT</td></tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>提出動画のスライド</title>
+<!-- 動画の静止画パート。build_submission.py が slides.html#<id> を 1920x1080 で 1 枚ずつ撮る -->
+<style>
+  :root {
+    --bg: #101216; --card: #1a1d23; --chip: #22262e; --line: #343943;
+    --ink: #f3f3f1; --ink2: #a9adb5; --ink3: #6f747d;
+    --base: #4b8fe0; --mon: #eb6834; --rec: #5aa9f0; --help: #b47ce0; --ok: #46b768;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink);
+               font-family: "Noto Sans JP", "Yu Gothic", "Meiryo", sans-serif; }
+  section { display: none; width: 1920px; height: 1080px; padding: 110px 140px; position: relative; overflow: hidden; }
+  section:target { display: flex; flex-direction: column; }
+  h1 { font-size: 76px; margin: 0 0 40px; font-weight: 700; letter-spacing: 0.01em; }
+  h2 { font-size: 60px; margin: 0 0 56px; font-weight: 700; }
+  .kicker { color: var(--mon); font-size: 32px; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 24px; }
+  .foot { position: absolute; left: 140px; right: 140px; bottom: 56px; font-size: 24px; color: var(--ink3); }
+
+  /* タイトル */
+  #title { justify-content: center; }
+  #title h1 { font-size: 112px; margin-bottom: 28px; }
+  #title .sub { font-size: 52px; color: var(--ink2); font-weight: 500; }
+  #title .meta { margin-top: 90px; font-size: 32px; color: var(--ink2); display: flex; gap: 48px; }
+  #title .meta span { border-left: 4px solid var(--mon); padding-left: 18px; }
+
+  /* 課題 */
+  .split { display: grid; grid-template-columns: 760px 1fr; gap: 80px; align-items: center; flex: 1; }
+  .split img { width: 760px; border-radius: 12px; display: block; }
+  .shot { position: relative; }
+  .shot .tag { position: absolute; left: 20px; bottom: 20px; background: rgba(0,0,0,.72); padding: 10px 20px;
+               border-radius: 8px; font-size: 28px; }
+  ul.points { list-style: none; margin: 0; padding: 0; display: grid; gap: 34px; }
+  ul.points li { font-size: 40px; line-height: 1.45; padding-left: 44px; position: relative; }
+  ul.points li::before { content: ""; position: absolute; left: 0; top: 0.5em; width: 18px; height: 18px;
+                         border-radius: 50%; background: var(--ink3); }
+  ul.points li small { display: block; font-size: 28px; color: var(--ink2); }
+  .answer { margin-top: 56px; font-size: 44px; font-weight: 700; color: var(--mon); }
+
+  /* 仕組み */
+  #method { padding-top: 80px; }
+  #method h2 { margin-bottom: 44px; }
+  #method .dg { font-size: 28px; }
+  #method .dg-row { grid-template-columns: 1fr auto 1.15fr auto 2.7fr auto 1fr; }
+  .notes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; margin-top: 48px; }
+  .notes div { background: var(--card); border-radius: 12px; padding: 26px 32px; font-size: 27px; line-height: 1.5; }
+  .notes b { display: block; font-size: 34px; margin-bottom: 10px; color: var(--ink); }
+  .notes span { color: var(--ink2); }
+
+  /* 結果 */
+  #results h2 { margin-bottom: 40px; }
+  .res { display: grid; grid-template-columns: 1040px 1fr; gap: 64px; align-items: start; }
+  .chart { background: var(--card); border-radius: 14px; padding: 28px 30px 18px; }
+  .chart svg { width: 100%; height: auto; display: block; }
+  .stats { display: grid; gap: 28px; align-content: start; }
+  .stat { border-left: 6px solid var(--mon); padding: 4px 0 4px 26px; }
+  .stat .v { font-size: 64px; font-weight: 700; line-height: 1.15; }
+  .stat .v small { font-size: 34px; color: var(--ink2); font-weight: 500; }
+  .stat .l { font-size: 27px; color: var(--ink2); line-height: 1.45; margin-top: 4px; }
+
+  /* まとめ */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; flex: 1; }
+  .cols h3 { font-size: 36px; margin: 0 0 30px; color: var(--mon); }
+  .cols h3.lim { color: var(--ink2); }
+  .cols ul.points li { font-size: 36px; }
+  #summary .end { font-size: 30px; color: var(--ink2); }
+</style>
+</head>
+<body>
+
+<section id="title">
+  <div class="kicker">PAI 最終課題</div>
+  <h1>しくじりに気づくロボット</h1>
+  <div class="sub">VLA に後付けする失敗検知・回復レイヤ</div>
+  <div class="meta">
+    <span>公開 VLA「SmolVLA」× LIBERO シミュレーション</span>
+    <span>映像はすべて等倍速</span>
+  </div>
+</section>
+
+<section id="problem">
+  <h2>VLA は自分の失敗に気づかない</h2>
+  <div class="split">
+    <div class="shot"><img src="problem.png" alt=""><div class="tag">物はもう手の中にないのに、運び続ける</div></div>
+    <div>
+      <ul class="points">
+        <li>掴み損ねても、空の手のまま運び続ける</li>
+        <li>同じ状態からは同じ行動を出す<small>→ 同じ失敗をくり返す</small></li>
+        <li>直すには再学習が要る<small>データも計算資源も大きい</small></li>
+      </ul>
+      <div class="answer">→ VLA の外側に「気づいて立て直す層」を付ける</div>
+    </div>
+  </div>
+</section>
+
+<section id="method">
+  <h2>仕組み：方策の外側に監視層を挟む</h2>
+  <!--DIAGRAM-->
+  <div class="notes">
+    <div><b>ずらしてから任せ直す</b><span>同じ状態のままだと、VLA は同じ失敗をくり返す</span></div>
+    <div><b>VLA を選ばない</b><span>中身に触れないので、別の VLA に差し替えても同じコードで動く</span></div>
+    <div><b>閾値は別データで較正</b><span>評価とは別の初期状態 60 回の走行から「3 mm」を決めた</span></div>
+  </div>
+</section>
+
+<section id="results">
+  <h2>結果：400 エピソードで比較</h2>
+  <div class="res">
+    <div class="chart"><!--CHART--></div>
+    <div class="stats">
+      <div class="stat"><div class="v">救済 33 <small>/ 悪化 2</small></div>
+        <div class="l">同じ初期状態の対で比較<br>McNemar 検定 p = 3.7×10<sup>−8</sup></div></div>
+      <div class="stat"><div class="v">7% → 31%</div><div class="l">妨害あり（持ち上げた物を取り上げる）</div></div>
+      <div class="stat"><div class="v">66% → 73%</div><div class="l">妨害なし（p = 0.039）</div></div>
+      <div class="stat"><div class="v">99.9%</div><div class="l">検知の的中率（712 / 713）<br>検知した瞬間、本当に手が空だった</div></div>
+    </div>
+  </div>
+  <div class="foot">LIBERO-Spatial / Object 各 10 タスク × 初期状態 5 通り × 妨害なし・あり × 監視なし・あり。誤差棒は 95% 信頼区間</div>
+</section>
+
+<section id="summary">
+  <h2>まとめ</h2>
+  <div class="cols">
+    <div>
+      <h3>できたこと</h3>
+      <ul class="points">
+        <li>VLA を変えずに外付けするだけで、失敗に気づいて立て直せた</li>
+        <li>見るのはロボット自身のセンサ値だけ<small>→ 実機にもそのまま持っていける</small></li>
+        <li>駄目なら止まって助けを求める<small>無限に再試行しない</small></li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="lim">限界と次の一手</h3>
+      <ul class="points">
+        <li>狙い違い・置き場所違いは指のセンサでは見えない<small>→ VLM による完了確認を足す</small></li>
+        <li>妨害なしの Spatial は +4pt で有意差なし</li>
+        <li>検知した失敗を学習データにして、VLA 自体を改善する</li>
+      </ul>
+    </div>
+  </div>
+  <div class="end">コードと詳しい評価は、概要欄の GitHub と説明資料をご覧ください</div>
+</section>
+
+</body>
+</html>

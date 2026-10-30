@@ -1,0 +1,50 @@
+<!-- システム構成図。slides.html と report.html に build_submission.py が差し込む。色は差し込み先の CSS 変数に従う -->
+<div class="dg">
+  <div class="dg-row">
+    <div class="dg-box">
+      <b>観測</b>
+      <span>俯瞰・手首カメラ<br>言語指示</span>
+    </div>
+    <div class="dg-arrow">→</div>
+    <div class="dg-box dg-vla">
+      <b>SmolVLA</b>
+      <span>公開 VLA・推論のみ<br>中身には触れない</span>
+    </div>
+    <div class="dg-arrow">→<small>行動</small></div>
+    <div class="dg-box dg-mon">
+      <b>監視層（本作品）</b>
+      <ol>
+        <li><em>L1 把持失敗</em>閉じて止まった指の開き幅が 3 mm 未満 → 空振り / 落下</li>
+        <li><em>L2 停滞・迷走</em>3 秒ほぼ動かない / 開閉をくり返す</li>
+        <li class="dg-rec"><em>回復</em>開く → 8 cm 上がる → 1〜2.5 cm ずらす → VLA に任せ直す</li>
+        <li class="dg-help"><em>HELP</em>2 回やり直しても駄目なら止まって助けを求める</li>
+      </ol>
+    </div>
+    <div class="dg-arrow">→</div>
+    <div class="dg-box">
+      <b>ロボット</b>
+      <span>Franka Panda<br>LIBERO（MuJoCo）</span>
+    </div>
+  </div>
+  <div class="dg-feedback">↑ 監視層が見るのはロボット自身のセンサ値（手先位置・指の位置・直前の指令）だけ。シミュレータの正解は採点にだけ使う</div>
+</div>
+<style>
+  .dg { color: var(--ink); }
+  .dg-row { display: grid; grid-template-columns: 1fr auto 1fr auto 2.6fr auto 1fr; align-items: stretch; gap: 0.5em; }
+  .dg-box { border: 1.5px solid var(--line); border-radius: 0.5em; padding: 0.7em 0.8em; background: var(--card);
+            display: flex; flex-direction: column; justify-content: center; gap: 0.3em; }
+  .dg-box b { font-size: 1.05em; }
+  .dg-box span { color: var(--ink2); font-size: 0.85em; line-height: 1.45; }
+  .dg-vla { border-color: var(--base); }
+  .dg-mon { border: 2.5px solid var(--mon); }
+  .dg-mon b { color: var(--mon); }
+  .dg-mon ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35em; font-size: 0.85em; line-height: 1.4; }
+  .dg-mon li { padding: 0.3em 0.5em; border-radius: 0.3em; background: var(--chip); }
+  .dg-mon em { font-style: normal; font-weight: 700; margin-right: 0.6em; }
+  .dg-rec em { color: var(--rec); }
+  .dg-help em { color: var(--help); }
+  .dg-arrow { align-self: center; display: flex; flex-direction: column; align-items: center; color: var(--ink2);
+              font-size: 1.4em; line-height: 1; }
+  .dg-arrow small { font-size: 0.5em; margin-top: 0.2em; }
+  .dg-feedback { margin-top: 0.7em; font-size: 0.85em; color: var(--ink2); text-align: right; }
+</style>

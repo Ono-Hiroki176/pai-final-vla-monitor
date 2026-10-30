@@ -70,6 +70,10 @@ runner/             LIBERO での実験
 notebooks/
   run_colab.ipynb     Colab での実行手順（build_notebook.py で生成）
 tests/                監視層の単体テスト
+docs/submission/      提出動画のスライドと説明資料の元（HTML）
+tools/
+  colab_driver.py     ターミナルから Colab で評価を回す
+  build_submission.py 提出動画（MP4）と説明資料（PDF）を作る
 ```
 
 ## 再現手順
@@ -94,6 +98,16 @@ uv venv -p 3.12 .venv && uv pip install --python .venv -r requirements.txt
 .venv/bin/python -m runner.run_eval --suite libero_spatial --tasks 0 --episodes 1 --conditions base,monitor --out outputs/smoke --video all
 .venv/bin/python -m runner.analyze outputs/smoke
 ```
+
+### 提出物（動画・説明資料）を作る
+
+デモの撮影（`outputs/colab/demo_*/videos/`）を回収したあと、WSL から実行する。HTML の描画と PDF への印刷に Windows 側の Edge を使う。
+
+```bash
+.venv/bin/python tools/build_submission.py --account <omnicampusアカウント名>
+```
+
+`outputs/submission/` に動画（1920x1080、約 2 分 16 秒、等倍速）と説明資料の PDF ができる。
 
 ## 使用した公開物とライセンス
 
